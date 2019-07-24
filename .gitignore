@@ -4,3 +4,4 @@ ProjectSettings/
 *.csproj
 .vs/
 *.sln
+Temp/

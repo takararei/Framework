@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace Assets.Framework.Factory
+namespace Assets.Framework.Res
 {
     public class BaseFactory:IBaseFactory
     {

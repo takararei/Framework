@@ -1,5 +1,5 @@
 ﻿using Assets.Framework.Extension;
-using Assets.Framework.Factory;
+using Assets.Framework.Res;
 //using DG.Tweening;
 using System;
 using System.Collections.Generic;
@@ -13,6 +13,7 @@ namespace Assets.Framework.UI
     public class UIFacade
     {
         private const string UIRootName = "Canvas";
+        private readonly string uiPrefabPath = "Prefabs/UIPanels/";
         /// <summary>
         /// 面板实例的位置
         /// </summary>
@@ -98,7 +99,11 @@ namespace Assets.Framework.UI
 
         public UIFacade()
         {
-            panelInfoDict = new Dictionary<UIPanelName, UIPanelInfo>();
+            panelInfoDict = new Dictionary<UIPanelName, UIPanelInfo>()
+            {
+                {UIPanelName.GameStartPanel,new UIPanelInfo(){ layer="Common"} },
+            };
+
             panelDict = new Dictionary<UIPanelName, IBasePanel>();
             panelShowDict = new Dictionary<UIPanelName, IBasePanel>();
             panelGODict = new Dictionary<UIPanelName, GameObject>();
@@ -128,14 +133,14 @@ namespace Assets.Framework.UI
             
         }
 
-        public void ParseUIpanelTypeAsset()
-        {
-            UIPanelDataMgr uiMgr = Resources.Load<UIPanelDataMgr>("AssetData/UIPanelData");
-            foreach (UIPanelInfo info in uiMgr.PanelInfoList)
-            {
-                panelInfoDict.Add((UIPanelName)info.id, info);
-            }
-        }
+        //public void ParseUIpanelTypeAsset()
+        //{
+        //    UIPanelDataMgr uiMgr = Resources.Load<UIPanelDataMgr>("AssetData/UIPanelData");
+        //    foreach (UIPanelInfo info in uiMgr.PanelInfoList)
+        //    {
+        //        panelInfoDict.Add((UIPanelName)info.id, info);
+        //    }
+        //}
 
         /// <summary>
         /// 获取面板的游戏物体
@@ -143,10 +148,12 @@ namespace Assets.Framework.UI
         private GameObject GetPanelGameObject(UIPanelName panelName,string path)
         {
             GameObject instPanel = panelGODict.TryGet(panelName);
+            
 
             if (instPanel == null)
             {
-                instPanel = GameObject.Instantiate(Resources.Load(path)) as GameObject;
+                GameObject res = ResMgr.Instance.GetRes<GameObject>(uiPrefabPath + panelName.ToString());
+                instPanel = GameObject.Instantiate(res) as GameObject;
                 instPanel.name = panelName.ToString();
                 panelGODict.Add(panelName, instPanel);
             }
@@ -175,21 +182,22 @@ namespace Assets.Framework.UI
 
                 GameObject instPanel = GetPanelGameObject(panelName, pInfo.path);
   
-                switch (pInfo.layer)
-                {
-                    case UILayer.Background:
-                        instPanel.transform.SetParent(BGTransform, false);
-                        break;
-                    case UILayer.Common:
-                        instPanel.transform.SetParent(CommonTransform, false);
-                        break;
-                    case UILayer.Top:
-                        instPanel.transform.SetParent(TopTransform, false);
-                        break;
-                    default:
-                        Debug.LogError(pInfo.panelName + "没有设置层级");
-                        break;
-                }
+                //switch (pInfo.layer)
+                //{
+                //    case UILayer.Background:
+                //        instPanel.transform.SetParent(BGTransform, false);
+                //        break;
+                //    case UILayer.Common:
+                //        instPanel.transform.SetParent(CommonTransform, false);
+                //        break;
+                //    case UILayer.Top:
+                //        instPanel.transform.SetParent(TopTransform, false);
+                //        break;
+                //    default:
+                //        Debug.LogError(pInfo.panelName + "没有设置层级");
+                //        break;
+                //}
+                instPanel.transform.SetParent(CommonTransform, false);
                 instPanel.transform.ResetLocal();
                 
                 panel = UIBusiness.GetPanelBusiness(panelName);

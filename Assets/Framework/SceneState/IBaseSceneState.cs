@@ -5,6 +5,7 @@ namespace Assets.Framework.SceneState
 {
     public interface IBaseSceneState
     {
+        SceneName scene { get; set; }
         void EnterScene();
         void ExitScene();
     }

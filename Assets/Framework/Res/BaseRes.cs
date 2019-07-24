@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Generic;
 using UnityEngine;
-namespace Assets.Framework.Factory
+namespace Assets.Framework.Res
 {
     public class BaseRes:IBaseRes
     {

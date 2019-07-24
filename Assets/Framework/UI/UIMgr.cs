@@ -1,5 +1,5 @@
 ﻿using Assets.Framework.Extension;
-using Assets.Framework.Factory;
+using Assets.Framework.Res;
 using Assets.Framework.SceneState;
 using Assets.Framework.Singleton;
 using System;
@@ -16,7 +16,7 @@ namespace Assets.Framework.UI
         {
             base.Init();
             uiFacade = new UIFacade();
-            ParseUIpanelTypeAsset();
+            //ParseUIpanelTypeAsset();
         }
         
         /// <summary>
@@ -27,10 +27,10 @@ namespace Assets.Framework.UI
         //    uiFacade.ParseUIPanelTypeJson();
         //}
 
-        public void ParseUIpanelTypeAsset()
-        {
-            uiFacade.ParseUIpanelTypeAsset();
-        }
+        //public void ParseUIpanelTypeAsset()
+        //{
+        //    uiFacade.ParseUIpanelTypeAsset();
+        //}
 
         public void Show(UIPanelName panelName)
         {

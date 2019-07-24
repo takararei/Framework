@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Framework.UI
 {
@@ -12,7 +8,7 @@ namespace Assets.Framework.UI
         {
             switch (name)
             {
-                //case UIPanelName.TestUIPanel:return new TestUIPanel();
+                case UIPanelName.GameStartPanel: return new GameStartPanel();
                 default:
                     Debug.LogError("不存在此面板" + name.ToString());
                     return null;
@@ -20,10 +16,12 @@ namespace Assets.Framework.UI
             }
 
         }
-    }
 
+        
+    }
     public enum UIPanelName
     {
-        TestUIPanel = 0,
+        GameStartPanel = 0,
     }
+
 }

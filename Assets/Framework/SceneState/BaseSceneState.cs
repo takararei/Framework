@@ -8,6 +8,13 @@ namespace Assets.Framework.SceneState
 {
     public class BaseSceneState : IBaseSceneState
     {
+        public SceneName scene
+        {
+            get;
+
+            set;
+        }
+
         public virtual void EnterScene()
         {
             

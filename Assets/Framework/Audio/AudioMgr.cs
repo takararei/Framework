@@ -1,4 +1,4 @@
-﻿using Assets.Framework.Factory;
+﻿using Assets.Framework.Res;
 using Assets.Framework.Singleton;
 using System;
 using System.Collections.Generic;
@@ -54,7 +54,7 @@ namespace Assets.Framework.Audio
 
         public void PlayBGM(string bgmName, bool loop = true)
         {
-            AudioClip bgm = FactoryMgr.Instance.GetRes<AudioClip>(bgmName);
+            AudioClip bgm = ResMgr.Instance.GetRes<AudioClip>(bgmName);
             mBGMSource.clip = bgm;
             mBGMSource.loop = loop;
             mBGMSource.Play();
@@ -72,7 +72,7 @@ namespace Assets.Framework.Audio
         {
             if (isPlayEffectMusic)
             {
-                AudioClip effect = FactoryMgr.Instance.GetRes<AudioClip>(effectName);
+                AudioClip effect = ResMgr.Instance.GetRes<AudioClip>(effectName);
                 mEffectSource.PlayOneShot(effect);
             }
         }

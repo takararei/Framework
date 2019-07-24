@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Assets.Framework.Factory
+namespace Assets.Framework.Res
 {
     public interface IBaseRes
     {

@@ -2,10 +2,10 @@
 using Assets.Framework.Singleton;
 using UnityEngine;
 
-namespace Assets.Framework.Factory
+namespace Assets.Framework.Res
 {
 
-    public class FactoryMgr:Singleton<FactoryMgr>
+    public class ResMgr:Singleton<ResMgr>
     {
         private IBaseRes resFactory;
         public override void Init()

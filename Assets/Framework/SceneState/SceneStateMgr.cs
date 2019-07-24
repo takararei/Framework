@@ -12,16 +12,15 @@ using UnityEngine.UI;
 
 namespace Assets.Framework.SceneState
 {
-    public class SceneStateMgr:Singleton<SceneStateMgr>
+    public class SceneStateMgr : Singleton<SceneStateMgr>
     {
-
         public IBaseSceneState lastSceneState;
         public IBaseSceneState currentSceneState;
 
         //遮罩相关
-        private GameObject mask;
-        private Image maskImage;
-        private float maskTime = 1.5f;
+        //private GameObject mask;
+        //private Image maskImage;
+        //private float maskTime = 1.5f;
 
         public override void Init()
         {
@@ -65,20 +64,34 @@ namespace Assets.Framework.SceneState
         //        toColor => maskImage.color = toColor,
         //        new Color(0, 0, 0, 0),
         //        maskTime);
-            
+
         //}
 
-        public void ChangeSceneState(IBaseSceneState baseSceneState)
+        public void GoToScene(SceneName name)
         {
             lastSceneState = currentSceneState;
-            ShowMask();
-            currentSceneState = baseSceneState;
+            currentSceneState = SceneType.GetScene(name);
+            currentSceneState.scene = name;
+            ExitSceneComplete();
         }
+
+        //public void ChangeSceneState(IBaseSceneState baseSceneState)
+        //{
+        //    lastSceneState = currentSceneState;
+        //    currentSceneState = baseSceneState;
+        //    //ShowMask();
+        //}
 
         private void ExitSceneComplete()
         {
-            lastSceneState.ExitScene();
+            //进加载
+            if (lastSceneState != null)
+            {
+                lastSceneState.ExitScene();
+                SceneManager.LoadScene((int)currentSceneState.scene);
+            }
             currentSceneState.EnterScene();
+            //进正式场景
             //HideMask();
         }
 

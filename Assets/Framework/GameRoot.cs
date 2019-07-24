@@ -1,12 +1,7 @@
 ﻿using Assets.Framework.Audio;
-using Assets.Framework.Factory;
+using Assets.Framework.Res;
 using Assets.Framework.SceneState;
 using Assets.Framework.UI;
-using Assets.Framework.Util;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 
 namespace Assets.Framework
@@ -21,19 +16,15 @@ namespace Assets.Framework
                 return _instance;
             }
         }
-        //public bool toMainScene;
-        //public int pickLevel;
-        //public PlayerData data;
         private void Awake()
         {
             DontDestroyOnLoad(this);
             _instance = this;
-            FactoryMgr.Instance.Init();
+            ResMgr.Instance.Init();
             AudioMgr.Instance.Init();
             UIMgr.Instance.Init();
-            //PlayerDataOperator.Instance.Init();
-            //AchievementSystem.Instance.Init();
             SceneStateMgr.Instance.Init();
+            SceneStateMgr.Instance.GoToScene(SceneName.GameStart);
 
         }
 
