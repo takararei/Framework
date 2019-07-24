@@ -7,12 +7,6 @@ using UnityEngine;
 
 namespace Assets.Framework.UI
 {
-    public class UILayer
-    {
-        public const string Background = "Background";
-        public const string Common = "Common";
-        public const string Top = "Top";
-    }
     public class BasePanel : IBasePanel
     {
         public GameObject rootUI

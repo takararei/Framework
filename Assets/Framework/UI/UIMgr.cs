@@ -10,27 +10,15 @@ namespace Assets.Framework.UI
 {
     public class UIMgr : Singleton<UIMgr>
     {
-        public UIFacade uiFacade;
+        private UIFacade uiFacade;
         
         public override void Init()
         {
             base.Init();
             uiFacade = new UIFacade();
-            //ParseUIpanelTypeAsset();
         }
         
-        /// <summary>
-        /// 解析JSON文件
-        /// </summary>
-        //public void ParseUIPanelTypeJson()
-        //{
-        //    uiFacade.ParseUIPanelTypeJson();
-        //}
-
-        //public void ParseUIpanelTypeAsset()
-        //{
-        //    uiFacade.ParseUIpanelTypeAsset();
-        //}
+        
 
         public void Show(UIPanelName panelName)
         {
@@ -46,6 +34,12 @@ namespace Assets.Framework.UI
         {
             uiFacade.Update();
         }
-        
+
+        public void ClearPanelDict()
+        {
+            uiFacade.ClearPanelDict();
+        }
+
+
     }
 }

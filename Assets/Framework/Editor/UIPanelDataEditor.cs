@@ -35,10 +35,10 @@ namespace Assets.Framework.UI
                         excelReader.Read();
                         UIPanelInfo pdata = new UIPanelInfo();
                         //数字类型需要转换
-                        pdata.id = int.Parse(excelReader.GetString(0));
-                        pdata.panelName = excelReader.GetString(1);
-                        pdata.path = excelReader.GetString(2);
-                        pdata.layer = excelReader.GetString(3);
+                        //pdata.id = int.Parse(excelReader.GetString(0));
+                        //pdata.panelName = excelReader.GetString(1);
+                        //pdata.path = excelReader.GetString(2);
+                        //pdata.layer = excelReader.GetString(3);
 
                         testDict.Add(pdata);
 

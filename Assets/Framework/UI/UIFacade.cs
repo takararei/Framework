@@ -40,7 +40,7 @@ namespace Assets.Framework.UI
             {
                 if (_bgTransform == null)
                 {
-                    _bgTransform = CanvasTransform.Find(UILayer.Background);
+                    _bgTransform = CanvasTransform.Find(UILayer.Bottom.ToString());
                 }
                 return _bgTransform;
             }
@@ -53,7 +53,7 @@ namespace Assets.Framework.UI
             {
                 if (_commonTransform == null)
                 {
-                    _commonTransform = CanvasTransform.Find(UILayer.Common);
+                    _commonTransform = CanvasTransform.Find(UILayer.Common.ToString());
                 }
                 return _commonTransform;
 
@@ -66,7 +66,7 @@ namespace Assets.Framework.UI
             {
                 if (_topTransform == null)
                 {
-                    _topTransform = CanvasTransform.Find(UILayer.Top);
+                    _topTransform = CanvasTransform.Find(UILayer.Top.ToString());
                 }
                 return _topTransform;
             }
@@ -75,10 +75,6 @@ namespace Assets.Framework.UI
         
 
         #region Panel-Dict
-        /// <summary>
-        /// 存储所有面板信息，名称，地址，层级
-        /// </summary>
-        private Dictionary<UIPanelName, UIPanelInfo> panelInfoDict;
         /// <summary>
         /// 保存所有被实例化的BasePanel组件,BasePanel 脚本
         /// </summary>
@@ -95,15 +91,11 @@ namespace Assets.Framework.UI
         /// 当前场景的面板游戏物体，预制体
         /// </summary>
         public Dictionary<UIPanelName, GameObject> currentScenePanelDict;
+        
         #endregion
 
         public UIFacade()
         {
-            panelInfoDict = new Dictionary<UIPanelName, UIPanelInfo>()
-            {
-                {UIPanelName.GameStartPanel,new UIPanelInfo(){ layer="Common"} },
-            };
-
             panelDict = new Dictionary<UIPanelName, IBasePanel>();
             panelShowDict = new Dictionary<UIPanelName, IBasePanel>();
             panelGODict = new Dictionary<UIPanelName, GameObject>();
@@ -133,19 +125,11 @@ namespace Assets.Framework.UI
             
         }
 
-        //public void ParseUIpanelTypeAsset()
-        //{
-        //    UIPanelDataMgr uiMgr = Resources.Load<UIPanelDataMgr>("AssetData/UIPanelData");
-        //    foreach (UIPanelInfo info in uiMgr.PanelInfoList)
-        //    {
-        //        panelInfoDict.Add((UIPanelName)info.id, info);
-        //    }
-        //}
 
         /// <summary>
         /// 获取面板的游戏物体
         /// </summary>
-        private GameObject GetPanelGameObject(UIPanelName panelName,string path)
+        private GameObject GetPanelGO(UIPanelName panelName,string path)
         {
             GameObject instPanel = panelGODict.TryGet(panelName);
             
@@ -173,30 +157,25 @@ namespace Assets.Framework.UI
             if (panel == null)
             {
                 //如果找不到 就实例
-                UIPanelInfo pInfo = panelInfoDict.TryGet(panelName);
-                if (pInfo == null)
-                {
-                    Debug.LogError("没有该面板的信息" + panelName.ToString());
-                    return null;
-                }
+                UIPanelInfo pInfo = UIBusiness.GetPanelInfo(panelName);
 
-                GameObject instPanel = GetPanelGameObject(panelName, pInfo.path);
-  
-                //switch (pInfo.layer)
-                //{
-                //    case UILayer.Background:
-                //        instPanel.transform.SetParent(BGTransform, false);
-                //        break;
-                //    case UILayer.Common:
-                //        instPanel.transform.SetParent(CommonTransform, false);
-                //        break;
-                //    case UILayer.Top:
-                //        instPanel.transform.SetParent(TopTransform, false);
-                //        break;
-                //    default:
-                //        Debug.LogError(pInfo.panelName + "没有设置层级");
-                //        break;
-                //}
+                GameObject instPanel = GetPanelGO(panelName, pInfo.path);
+
+                switch (pInfo.Layer)
+                {
+                    case UILayer.Bottom:
+                        instPanel.transform.SetParent(BGTransform, false);
+                        break;
+                    case UILayer.Common:
+                        instPanel.transform.SetParent(CommonTransform, false);
+                        break;
+                    case UILayer.Top:
+                        instPanel.transform.SetParent(TopTransform, false);
+                        break;
+                    default:
+                        Debug.LogError(pInfo.Name + "没有设置层级");
+                        break;
+                }
                 instPanel.transform.SetParent(CommonTransform, false);
                 instPanel.transform.ResetLocal();
                 

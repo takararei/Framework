@@ -8,9 +8,11 @@ namespace Assets.Framework.UI
     [Serializable]
     public class UIPanelInfo
     {
-        public int id;
-        public string panelName;
+        //public int id;
+        public UIPanelName Name;
+        //public string panelName;
         public string path;
-        public string layer;
+        //public string layer;
+        public UILayer Layer;
     }
 }

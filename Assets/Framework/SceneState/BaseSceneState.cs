@@ -22,7 +22,7 @@ namespace Assets.Framework.SceneState
 
         public virtual void ExitScene()
         {
-            UIMgr.Instance.uiFacade.ClearPanelDict();
+            UIMgr.Instance.ClearPanelDict();
 
         }
     }
