@@ -8,80 +8,95 @@ using UnityEditor;
 
 public class BundleEditor : MonoBehaviour
 {
+    //根据文件夹打包
     //private static string ABBYTEPATH = RealConfig.GetRealFram().m_ABBytePath;
     private static string m_BunleTargetPath = Application.streamingAssetsPath;
     private static string ABCONFIGPATH = "Assets/Editor/ABConfig.asset";
-    //ab名,path
-    private static Dictionary<string, string> m_AllFileDir = new Dictionary<string, string>();
-    //ab文件夹地址
+    private static ABConfig aBConfig = AssetDatabase.LoadAssetAtPath<ABConfig>(ABCONFIGPATH);
+
+    //需要设置的ABName的文件夹 ab名,path
+    private static Dictionary<string, string> m_NeedSetABNameFolderDict = new Dictionary<string, string>();
+    //需要设置ABName的Prefab及其没有ABName的资源
+    private static Dictionary<string, List<string>> m_NeedSetABNamePrefabAndResDict = new Dictionary<string, List<string>>();
+    //需要设置ABName的所有文件 包括文件夹 地址
     private static List<string> m_AllFileAB = new List<string>();
-    //每个prefab 和对应的依赖地址
-    private static Dictionary<string, List<string>> m_AllPrefabDir = new Dictionary<string, List<string>>();
-    private static ABConfig aBConfig= AssetDatabase.LoadAssetAtPath<ABConfig>(ABCONFIGPATH);
-    //储存所有有效路径
-    private static List<string> m_ConfigFil = new List<string>();
+    //储存所有有效路径 大包的地址  shader sound 所有prefab地址
+    private static List<string> m_ConfigFil = new List<string>();//一共就三个 prefab地址，shader sound //记录要打的包源地址
+
+
+    private static void OnInit()
+    {
+        m_AllFileAB.Clear();
+        m_NeedSetABNameFolderDict.Clear();
+        m_NeedSetABNamePrefabAndResDict.Clear();
+        m_ConfigFil.Clear();
+    }
+    private static void ReadConfig()
+    {
+
+    }
     [MenuItem("Tools/打包")]
     public static void Build()
     {
-        m_AllFileAB.Clear();
-        m_AllFileDir.Clear();
-        m_AllPrefabDir.Clear();
-        m_ConfigFil.Clear();
+        OnInit();
         //将所有的config数据都加到dict 以及所有文件夹地址    
         foreach (ABConfig.FileDirABName dir in aBConfig.m_AllFileDirAB)
         {
-            if (m_AllFileDir.ContainsKey(dir.ABName))
+            if (m_NeedSetABNameFolderDict.ContainsKey(dir.ABName))
             {
                 Debug.LogError("AB名字重复："+dir.ABName);
             }
             else
             {
-                m_AllFileDir.Add(dir.ABName, dir.Path);
-                m_AllFileAB.Add(dir.Path);
+                //记录文件夹的包名和地址
+                m_NeedSetABNameFolderDict.Add(dir.ABName, dir.Path);//先记录 shader sound
+                
+                m_AllFileAB.Add(dir.Path);//记录shader sound文件夹地址
                 m_ConfigFil.Add(dir.Path);
             }
         }
-        //查找所有Prefab文件夹下所有的Prefab，获取的是地址的GUID
+        //查找Prefab文件夹下所有的Prefab，获取的是地址的GUID
         string[] allStr = AssetDatabase.FindAssets("t:Prefab", aBConfig.m_AllPrefabPath.ToArray());
         //遍历所有prefab地址GUID
         for (int i = 0; i < allStr.Length; i++)
         {
-
             //GUID转为地址
             string path = AssetDatabase.GUIDToAssetPath(allStr[i]);
             //进度条
             EditorUtility.DisplayProgressBar("查找prefab", "Prefab:" + path, i * 1.0f / allStr.Length);//进度条
-            m_ConfigFil.Add(path);
-            if (!ContainAllFileAB(path))
+            //每个prefab也打单独的包名
+            m_ConfigFil.Add(path);//记下所有prefab 地址
+            if (!ContainAllFileAB(path))//一般来说肯定没包含任何prefab地址
             {
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);//加载这个prefab
                 string[] allDepend = AssetDatabase.GetDependencies(path);//获取所有依赖的资源的地址
-                List<string> allDependPath = new List<string>();
+                List<string> allDependPaths = new List<string>();
                 for (int j = 0; j < allDepend.Length; j++)
                 {
+                    //只会记录module下的资源 shader和sound不会记录
                     if (!ContainAllFileAB(allDepend[j]) && !allDepend[j].EndsWith(".cs"))//排除脚本
                     {
-                        m_AllFileAB.Add(allDepend[j]);
-                        allDependPath.Add(allDepend[j]);
+                        m_AllFileAB.Add(allDepend[j]);//所有的prefab 目前是 attack shader sound 以及modle里跟attack相关的
+                        allDependPaths.Add(allDepend[j]);
                     }
                 }
 
-                if (m_AllPrefabDir.ContainsKey(prefab.name))
+                if (m_NeedSetABNamePrefabAndResDict.ContainsKey(prefab.name))
                 {
                     Debug.LogError("存在相同名字的Prefab！名字：" + prefab.name);
                 }
                 else
                 {
-                    m_AllPrefabDir.Add(prefab.name, allDependPath);
+                    m_NeedSetABNamePrefabAndResDict.Add(prefab.name, allDependPaths);//记下每个prefab和对应的依赖（除shader.sound
                 }
             }
 
         }
-       
-        SetAllABName();
+
+        SetAllABName();//给他们打上ab名， attack shader sound  所有的prefab资源打上对应的ab 如attack
         BuildAssetBundle();
-        ClearABName();
-        //刷新
+        ClearABName();//清理掉AB名
+        ////刷新
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
         //清除进度条
@@ -95,13 +110,13 @@ public class BundleEditor : MonoBehaviour
         config.ABList = new List<ABBase>();
         foreach(var path in  resPathDic.Keys)
         {
-            if (!ValidPath(path))
-                continue;
+            //if (!ValidPath(path))//是不是shader sound prefab下的资源 不是的话就不管
+            //    continue;
             ABBase abBase = new ABBase();
             abBase.Path = path;
             abBase.Crc = Crc32.GetCrc32(path);
             abBase.ABName = resPathDic[path];
-            abBase.AssetName = path.Remove(0, path.LastIndexOf("/")+1);
+            abBase.AssetName = path.Remove(0, path.LastIndexOf("/")+1);//资源的名称
             abBase.ABDependence = new List<string>();
             string[] resDependece = AssetDatabase.GetDependencies(path);
             for (int i = 0; i < resDependece.Length; i++)
@@ -134,11 +149,11 @@ public class BundleEditor : MonoBehaviour
         xs.Serialize(sw, config);
         sw.Close();
         fileStream.Close();
-        //写入二进制
-        foreach (ABBase abBase in config.ABList)
-        {
-            abBase.Path = "";
-        }
+        ////写入二进制
+        //foreach (ABBase abBase in config.ABList)
+        //{
+        //    abBase.Path = "";
+        //}
         //FileStream fs = new FileStream(ABBYTEPATH, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
         //fs.Seek(0, SeekOrigin.Begin);
         //fs.SetLength(0);
@@ -152,23 +167,29 @@ public class BundleEditor : MonoBehaviour
     {
         string[] allBundlesNames = AssetDatabase.GetAllAssetBundleNames();
         Dictionary<string, string> resPathDic = new Dictionary<string, string>();//路径 包名
-        for (int i = 0; i < allBundlesNames.Length; i++)
+        for (int i = 0; i < allBundlesNames.Length; i++)//也就3种包 shader sound attack
         {
             string[] allBundlePaths = AssetDatabase.GetAssetPathsFromAssetBundle(allBundlesNames[i]);
             for (int j = 0; j < allBundlePaths.Length; j++)
             {
-                if (allBundlePaths[j].EndsWith(".cs"))
+                //包括shader和sound下 以及prefab关联的资源
+                if (allBundlePaths[j].EndsWith(".cs"))//去掉代码文件
                     continue;
-                //Debug.Log("此AB包：" + allBundles[i] + "下面包含的资源文件路径：" + allBundlePath[j]);
-                resPathDic.Add(allBundlePaths[j], allBundlesNames[i]);
+
+                if(ValidPath(allBundlePaths[j]))
+                {
+                    resPathDic.Add(allBundlePaths[j], allBundlesNames[i]);
+                }
             }
         }
+
         //删除多余的AB包
         DeleteAB();
 
         WriteData(resPathDic);
-        //生成自己的配置表
+        ////生成自己的配置表
 
+        ////打包
         AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(m_BunleTargetPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
     }
 
@@ -176,10 +197,10 @@ public class BundleEditor : MonoBehaviour
     {
         string[] allBundlesNames = AssetDatabase.GetAllAssetBundleNames();
         DirectoryInfo direction = new DirectoryInfo(m_BunleTargetPath);
-        FileInfo[] files = direction.GetFiles("*", SearchOption.AllDirectories);
+        FileInfo[] files = direction.GetFiles("*", SearchOption.AllDirectories);//获得streamingasset下所有的文件
         for (int i = 0; i < files.Length; i++)
         {
-            if (ContainABName(files[i].Name, allBundlesNames) || files[i].Name.EndsWith(".meta"))
+            if (ContainABName(files[i].Name, allBundlesNames) || files[i].Name.EndsWith(".meta"))//如果文件的名字是那三个或者是meta
             {
                 continue;
             }
@@ -257,14 +278,14 @@ public class BundleEditor : MonoBehaviour
     //给每个资源文件夹设置包名
     static void SetAllABName()
     {
-        foreach (string name in m_AllFileDir.Keys)
+        foreach (string name in m_NeedSetABNameFolderDict.Keys)
         {
-            SetABName(name, m_AllFileDir[name]);
+            SetABName(name, m_NeedSetABNameFolderDict[name]);
         }
         //依赖的资源 设置成prefab名的包
-        foreach (string name in m_AllPrefabDir.Keys)
+        foreach (string name in m_NeedSetABNamePrefabAndResDict.Keys)
         {
-            SetABName(name, m_AllPrefabDir[name]);
+            SetABName(name, m_NeedSetABNamePrefabAndResDict[name]);
         }
     }
 
