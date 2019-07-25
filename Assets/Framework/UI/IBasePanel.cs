@@ -28,17 +28,10 @@ namespace Assets.Framework.UI
         /// 更新
         /// </summary>
         void Update();
-
+        
         /// <summary>
-        /// 一些关闭交互
+        /// 清理
         /// </summary>
-        //void OnPause();
-
-        /// <summary>
-        /// 重启交互
-        /// </summary>
-        //void OnResume();
-
         void OnDestroy();
     }
 }

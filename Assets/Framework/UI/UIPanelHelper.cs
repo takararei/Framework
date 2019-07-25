@@ -8,20 +8,18 @@ namespace Assets.Framework.UI
         Bottom,
         Top,
     }
-    public static class UIBusiness
+    public static class UIPanelHelper
     {
         public static UIPanelInfo GetPanelInfo(UIPanelName name)
         {
-            int index = (int)name;
-            if(index>=panelInfoArr.Length)
-            {
-                Debug.LogError("没有该面板的PanelInfo:" + name.ToString());
-                throw new System.Exception();
-            }
-            return panelInfoArr[(int)name];
+            var index = (int)name;
+            if (index < panelInfoArr.Length)
+                return panelInfoArr[(int) name];
+            Debug.LogError("没有该面板的PanelInfo:" + name.ToString());
+            throw new System.Exception();
         }
 
-        private static UIPanelInfo[] panelInfoArr = new UIPanelInfo[]
+        private static readonly UIPanelInfo[] panelInfoArr = new UIPanelInfo[]
         {
             new UIPanelInfo(){Name=UIPanelName.GameStartPanel,Layer=UILayer.Common},
         };

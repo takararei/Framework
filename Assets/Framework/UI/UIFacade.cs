@@ -157,7 +157,7 @@ namespace Assets.Framework.UI
             if (panel == null)
             {
                 //如果找不到 就实例
-                UIPanelInfo pInfo = UIBusiness.GetPanelInfo(panelName);
+                UIPanelInfo pInfo = UIPanelHelper.GetPanelInfo(panelName);
 
                 GameObject instPanel = GetPanelGO(panelName, pInfo.path);
 
@@ -179,7 +179,7 @@ namespace Assets.Framework.UI
                 instPanel.transform.SetParent(CommonTransform, false);
                 instPanel.transform.ResetLocal();
                 
-                panel = UIBusiness.GetPanelBusiness(panelName);
+                panel = UIPanelHelper.GetPanelBusiness(panelName);
                 panel.rootUI = instPanel;
 
                 panelDict.Add(panelName, panel);

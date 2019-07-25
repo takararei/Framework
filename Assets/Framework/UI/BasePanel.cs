@@ -19,21 +19,8 @@ namespace Assets.Framework.UI
         protected GameObject UICanvas;
         public virtual void Init()
         {
-            //UICanvas = UIManager.GetInstance().CanvasTransform.gameObject;
-        }
 
-        protected bool SetCanvasGroup()
-        {
-            canvasGroup = rootUI.transform.GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
-            {
-                Debug.Log(rootUI.name + "没有canvasGroup组件");
-                return false;
-            }
-            //return canvasGroup;
-            return true;
         }
-
 
         public virtual void Update()
         {
@@ -43,21 +30,13 @@ namespace Assets.Framework.UI
 
         public virtual void OnShow()
         {
-            if (rootUI.activeSelf == true) return;
+            if (rootUI.activeSelf) return;
             rootUI.SetActive(true);
         }
 
-        //public virtual void OnPause()
-        //{
-        //}
-
-        //public virtual void OnResume()
-        //{
-        //}
-
         public virtual void OnHide()
         {
-            if (rootUI.activeSelf == false) return;
+            if (!rootUI.activeSelf) return;
             rootUI.SetActive(false);
         }
 
