@@ -12,7 +12,7 @@ public class BundleEditor : MonoBehaviour
     //private static string ABBYTEPATH = RealConfig.GetRealFram().m_ABBytePath;
     private static string m_BunleTargetPath = Application.streamingAssetsPath;
     private static string ABCONFIGPATH = "Assets/Editor/ABConfig.asset";
-    private static ABConfig aBConfig = AssetDatabase.LoadAssetAtPath<ABConfig>(ABCONFIGPATH);
+    private static ABConfig aBConfig;
 
     //需要设置的ABName的文件夹 ab名,path
     private static Dictionary<string, string> m_NeedSetABNameFolderDict = new Dictionary<string, string>();
@@ -30,6 +30,7 @@ public class BundleEditor : MonoBehaviour
         m_NeedSetABNameFolderDict.Clear();
         m_NeedSetABNamePrefabAndResDict.Clear();
         m_ConfigFil.Clear();
+        aBConfig= AssetDatabase.LoadAssetAtPath<ABConfig>(ABCONFIGPATH);
     }
     private static void ReadConfig()
     {
@@ -141,25 +142,25 @@ public class BundleEditor : MonoBehaviour
             config.ABList.Add(abBase);
         }
         //写入xml
-        string xmlPath = Application.dataPath + "/AssetbundleConfig.xml";
+        string xmlPath = Application.dataPath + "/AssetBundleConfig.xml";
         if (File.Exists(xmlPath)) File.Delete(xmlPath);
         FileStream fileStream = new FileStream(xmlPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
         StreamWriter sw = new StreamWriter(fileStream, System.Text.Encoding.UTF8);
         XmlSerializer xs = new XmlSerializer(config.GetType());
         xs.Serialize(sw, config);
-        sw.Close();
+        sw.Close(); 
         fileStream.Close();
         ////写入二进制
-        //foreach (ABBase abBase in config.ABList)
-        //{
-        //    abBase.Path = "";
-        //}
-        //FileStream fs = new FileStream(ABBYTEPATH, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-        //fs.Seek(0, SeekOrigin.Begin);
-        //fs.SetLength(0);
-        //BinaryFormatter bf = new BinaryFormatter();
-        //bf.Serialize(fs, config);
-        //fs.Close();
+        foreach (ABBase abBase in config.ABList)
+        {
+            abBase.Path = "";
+        }
+        FileStream fs = new FileStream("Assets/GameData/Data/ABData/AssetBundleConfig.bytes", FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+        fs.Seek(0, SeekOrigin.Begin);
+        fs.SetLength(0);
+        BinaryFormatter bf = new BinaryFormatter();
+        bf.Serialize(fs, config);
+        fs.Close();
         //AssetDatabase.Refresh();
         //SetABName("assetbundleconfig", ABBYTEPATH);
     }
@@ -248,7 +249,7 @@ public class BundleEditor : MonoBehaviour
         for (int i = 0; i < m_AllFileAB.Count; i++)
         {
             //如果这个资源地址 已经存在 或者就是某个被记录文件夹下的 就不需要再打包
-            if (path == m_AllFileAB[i] || path.Contains(m_AllFileAB[i]))
+            if (path == m_AllFileAB[i] || (path.Contains(m_AllFileAB[i]) && (path.Replace(m_AllFileAB[i], "")[0] == '/')))
                 return true;
         }
         return false;
@@ -266,9 +267,9 @@ public class BundleEditor : MonoBehaviour
         {
             assetImporter.assetBundleName = name;
         }
-    }
+    }//单文件
 
-    static void SetABName(string name,List<string> paths)
+    static void SetABName(string name,List<string> paths)//多文件
     {
         for (int i = 0; i < paths.Count; i++)
         {

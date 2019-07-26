@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Assets.Framework.Res
 {
-
     public class ResMgr:Singleton<ResMgr>
     {
         private IBaseRes resFactory;
@@ -17,8 +16,6 @@ namespace Assets.Framework.Res
         {
             return resFactory.GetRes<T>(resPath);
         }
-
-        
 
     }
 }

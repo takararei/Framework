@@ -5,3 +5,5 @@ ProjectSettings/
 .vs/
 *.sln
 Temp/
+/Assets/GameData
+/Assets/GameData.meta
