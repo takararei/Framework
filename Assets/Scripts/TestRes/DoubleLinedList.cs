@@ -12,7 +12,7 @@ public class DoubleLinkedListNode<T> where T : class, new()
     //后一个节点
     public DoubleLinkedListNode<T> next = null;
     //当前节点
-    public T t = null;
+    public T curr = null;
 }
 
 //双向链表结构
@@ -41,7 +41,7 @@ public class DoubleLinedList<T> where T : class, new()
         DoubleLinkedListNode<T> pList = m_DoubleLinkNodePool.Spawn(true);
         pList.next = null;
         pList.prev = null;
-        pList.t = t;
+        pList.curr = t;
         return AddToHeader(pList);
     }
 
@@ -80,7 +80,7 @@ public class DoubleLinedList<T> where T : class, new()
         DoubleLinkedListNode<T> pList = m_DoubleLinkNodePool.Spawn(true);
         pList.next = null;
         pList.prev = null;
-        pList.t = t;
+        pList.curr = t;
         return AddToTail(pList);
     }
 
@@ -131,7 +131,7 @@ public class DoubleLinedList<T> where T : class, new()
             pNode.next.prev = pNode.prev;
 
         pNode.next = pNode.prev = null;
-        pNode.t = null;
+        pNode.curr = null;
         m_DoubleLinkNodePool.Recycle(pNode);
         m_Count--;
     }
@@ -185,7 +185,7 @@ public class CMapList<T> where T : class, new()
     {
         while (m_DLink.Tail != null)
         {
-            Remove(m_DLink.Tail.t);
+            Remove(m_DLink.Tail.curr);
         }
     }
 
@@ -212,7 +212,7 @@ public class CMapList<T> where T : class, new()
     {
         if (m_DLink.Tail != null)
         {
-            Remove(m_DLink.Tail.t);
+            Remove(m_DLink.Tail.curr);
         }
     }
 
@@ -237,7 +237,7 @@ public class CMapList<T> where T : class, new()
     /// <returns></returns>
     public T Back()
     {
-        return m_DLink.Tail == null ? null : m_DLink.Tail.t;
+        return m_DLink.Tail == null ? null : m_DLink.Tail.curr;
     }
 
     /// <summary>

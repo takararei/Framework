@@ -8,12 +8,27 @@ using UnityEngine;
 
 public class AssetBundleMgr : Singleton<AssetBundleMgr>
 {
+    //记录加载的资源块信息 事先加载好了所有的资源块信息
     protected Dictionary<uint, ResourceItem> m_ResourceItemDic = new Dictionary<uint, ResourceItem>();
+    /// <summary>
+    /// 记录已经加载的AB包
+    /// </summary>
     protected Dictionary<uint, AssetBundleItem> m_AssetBundleItemDic = new Dictionary<uint, AssetBundleItem>();
+    //AB包信息的资源池
+    protected ClassObjectPool<AssetBundleItem> m_AssetBundleItemPool = ObjectMgr.Instance.GetOrCreateClassPool<AssetBundleItem>(500);
 
-    protected ClassObjectPool<AssetBundleItem> m_AssetBundleItemPool =
-        ObjectMgr.Instance.GetOrCreateClassPool<AssetBundleItem>(500);
+    protected string ABLoadPath
+    {
+        get
+        {
+            return Application.streamingAssetsPath + "/";
+        }
+    }
 
+    /// <summary>
+    /// 加载配置表
+    /// </summary>
+    /// <returns></returns>
     public bool LoadAssetBundleConfig()
     {
         m_ResourceItemDic.Clear();
@@ -50,7 +65,7 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
         }
         return true;
     }
-
+    //加载包里的资源信息
     public ResourceItem LoadResouceAssetBundle(uint crc)
     {
         ResourceItem item = null;
@@ -78,33 +93,11 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
 
         return item;
     }
-
-    private AssetBundle LoadAssetBundle(string name)
+    public ResourceItem GetResourceItem(uint crc)
     {
-        AssetBundleItem item = null;
-        uint crc = Crc32.GetCrc32(name);
-
-        if (!m_AssetBundleItemDic.TryGetValue(crc, out item))
-        {
-            AssetBundle assetBundle = null;
-            string fullPath = /*ABLoadPath +*/ name;
-            assetBundle = AssetBundle.LoadFromFile(fullPath);
-
-            if (assetBundle == null)
-            {
-                Debug.LogError(" Load AssetBundle Error:" + fullPath);
-            }
-
-            item = m_AssetBundleItemPool.Spawn(true);
-            item.assetBundle = assetBundle;
-            item.RefCount++;
-            m_AssetBundleItemDic.Add(crc, item);
-        }
-        else
-        {
-            item.RefCount++;
-        }
-        return item.assetBundle;
+        ResourceItem item = null;
+        m_ResourceItemDic.TryGetValue(crc, out item);
+        return item;
     }
     public void ReleaseAsset(ResourceItem item)
     {
@@ -123,13 +116,40 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
         UnLoadAssetBundle(item.m_ABName);
     }
 
+    private AssetBundle LoadAssetBundle(string name)
+    {
+        AssetBundleItem item = null;
+        uint crc = Crc32.GetCrc32(name);
+
+        if (!m_AssetBundleItemDic.TryGetValue(crc, out item))
+        {
+            AssetBundle assetBundle = null;
+            string fullPath = ABLoadPath + name;
+            assetBundle = AssetBundle.LoadFromFile(fullPath);
+
+            if (assetBundle == null)
+            {
+                Debug.LogError(" Load AssetBundle Error:" + fullPath);
+            }
+
+            item = m_AssetBundleItemPool.Spawn(true);
+            item.assetBundle = assetBundle;
+            item.Retain();
+            m_AssetBundleItemDic.Add(crc, item);
+        }
+        else
+        {
+            item.Retain();
+        }
+        return item.assetBundle;
+    }
     private void UnLoadAssetBundle(string name)
     {
         AssetBundleItem item = null;
         uint crc = Crc32.GetCrc32(name);
         if (m_AssetBundleItemDic.TryGetValue(crc, out item) && item != null)
         {
-            item.RefCount--;
+            item.Release();
             if (item.RefCount <= 0 && item.assetBundle != null)
             {
                 item.assetBundle.Unload(true);
@@ -140,47 +160,6 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
         }
     }
 
+    
 }
-//资源记录
-public class ResourceItem
-{
-    public uint m_Crc = 0;
-    public string m_AssetName = string.Empty;
-    public string m_ABName = string.Empty;
-    public List<string> m_DependAssetBundle = null;
-    public AssetBundle m_AssetBundle = null;
-    //资源对象
-    public Object m_Obj = null;
-    //资源唯一标识
-    public int m_Guid = 0;
-    //资源最后所使用的时间
-    public float m_LastUseTime = 0.0f;
-    //引用计数
-    protected int m_RefCount = 0;
-    //是否跳场景清掉
-    public bool m_Clear = true;
-    public int RefCount
-    {
-        get { return m_RefCount; }
-        set
-        {
-            m_RefCount = value;
-            if (m_RefCount < 0)
-            {
-                Debug.LogError("refcount < 0" + m_RefCount + " ," + (m_Obj != null ? m_Obj.name : "name is null"));
-            }
-        }
-    }
-}
-//包
-public class AssetBundleItem
-{
-    public AssetBundle assetBundle = null;
-    public int RefCount;
 
-    public void Reset()
-    {
-        assetBundle = null;
-        RefCount = 0;
-    }
-}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
+using Assets.Framework.Util;
 using UnityEngine;
 using UnityEditor;
 
@@ -10,7 +11,7 @@ public class BundleEditor : MonoBehaviour
 {
     //根据文件夹打包
     //private static string ABBYTEPATH = RealConfig.GetRealFram().m_ABBytePath;
-    private static string m_BunleTargetPath = Application.streamingAssetsPath;
+    private static string m_BundleTargetPath = Application.streamingAssetsPath;
     private static string ABCONFIGPATH = "Assets/Editor/ABConfig.asset";
     private static ABConfig aBConfig;
 
@@ -142,13 +143,15 @@ public class BundleEditor : MonoBehaviour
             config.ABList.Add(abBase);
         }
         //写入xml
+
         string xmlPath = Application.dataPath + "/AssetBundleConfig.xml";
+        //SerializeUtil.XMLSerialize(xmlPath, config);
         if (File.Exists(xmlPath)) File.Delete(xmlPath);
         FileStream fileStream = new FileStream(xmlPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
         StreamWriter sw = new StreamWriter(fileStream, System.Text.Encoding.UTF8);
         XmlSerializer xs = new XmlSerializer(config.GetType());
         xs.Serialize(sw, config);
-        sw.Close(); 
+        sw.Close();
         fileStream.Close();
         ////写入二进制
         foreach (ABBase abBase in config.ABList)
@@ -191,13 +194,13 @@ public class BundleEditor : MonoBehaviour
         ////生成自己的配置表
 
         ////打包
-        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(m_BunleTargetPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
+        AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(m_BundleTargetPath, BuildAssetBundleOptions.ChunkBasedCompression, EditorUserBuildSettings.activeBuildTarget);
     }
 
     static void DeleteAB()
     {
         string[] allBundlesNames = AssetDatabase.GetAllAssetBundleNames();
-        DirectoryInfo direction = new DirectoryInfo(m_BunleTargetPath);
+        DirectoryInfo direction = new DirectoryInfo(m_BundleTargetPath);
         FileInfo[] files = direction.GetFiles("*", SearchOption.AllDirectories);//获得streamingasset下所有的文件
         for (int i = 0; i < files.Length; i++)
         {
