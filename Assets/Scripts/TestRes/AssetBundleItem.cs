@@ -29,10 +29,5 @@ public class AssetBundleItem
 
     public virtual void OnZeroRelease()
     {
-        //if (assetBundle != null)
-        //{
-        //    assetBundle.Unload(true);
-        //}
-        //Reset();
     }
 }

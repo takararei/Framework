@@ -1,26 +1,51 @@
-﻿using System.Collections;
+﻿
+using System.Collections;
 using System.Collections.Generic;
-using Assets.Framework.Singleton;
 using UnityEngine;
-
-public enum LoadResPriority
+/// <summary>
+/// 异步加载资源的信息，含回调信息
+/// </summary>
+public class AsyncLoadResInfo//用于记录排队等待加载的资源信息 和回调
 {
-    RES_HIGHT = 0,//最高优先级
-    RES_MIDDLE,//一般优先级
-    RES_SLOW,//低优先级
-    RES_NUM,
+    public List<AsyncLoadResCallBackInfo> m_CallBackList = new List<AsyncLoadResCallBackInfo>();
+    public uint m_Crc;
+    public string m_Path;
+    public LoadResPriority m_Priority = LoadResPriority.RES_SLOW;
+    public bool isSprite = false;
+    public void Reset()
+    {
+        m_Crc = 0;
+        m_Path = "";
+        m_Priority = LoadResPriority.RES_SLOW;
+        isSprite = false;
+
+    }
 }
-
-
-
-public delegate void OnLoadResFinish(string path, Object obj, object param1 = null, object param2 = null,
-    object param3 = null);
-
-public class ResourceMgr : Singleton<ResourceMgr>
+/// <summary>
+/// 异步加载资源的回调信息
+/// </summary>
+public class AsyncLoadResCallBackInfo//回调
 {
-    /// <summary>
-    /// 是否从AB包加载
-    /// </summary>
+    public OnLoadResFinish m_DealFinish = null;
+    public object m_Param1 = null, m_Param2 = null, m_Param3 = null;
+
+    public void Reset()
+    {
+        m_DealFinish = null;
+        m_Param1 = null;
+        m_Param2 = null;
+        m_Param3 = null;
+
+    }
+}
+public class ResHelper
+{
+    private const int MAX_CACHE_COUNT = 500;
+    private const long MAX_LOAD_RES_TIME = 200000;
+    //对象池
+    protected ClassObjectPool<AsyncLoadResInfo> m_AsyncLoadResParamPool = new ClassObjectPool<AsyncLoadResInfo>(50);
+    protected ClassObjectPool<AsyncLoadResCallBackInfo> m_AsyncCallBackPool = new ClassObjectPool<AsyncLoadResCallBackInfo>(100);
+
     public bool m_loadFromAssetBundle = true;
     /// <summary>
     /// 缓存引用计数为零的资源列表，达到缓存最大的时候释放这个列表里面最早没用的资源
@@ -29,31 +54,18 @@ public class ResourceMgr : Singleton<ResourceMgr>
     /// <summary>
     /// 记录一下正在使用的ResourceItem
     /// </summary>
-    public Dictionary<uint, ResourceItem> AssetDic { get; set; } = new Dictionary<uint, ResourceItem>();
-
-    //最长连续卡着加载资源的时间，单位微秒
-    private const long MAXLOADRESTIME = 200000;
-
-    //最大缓存个数
-    private const int MAXCACHECOUNT = 500;
+    protected Dictionary<uint, ResourceItem> AssetDic { get; set; } = new Dictionary<uint, ResourceItem>();
 
     //Mono脚本
     protected MonoBehaviour m_Startmono;
-    //异步加载队列
-    protected List<AsyncLoadResInfo>[] m_LoadingAssetList = new List<AsyncLoadResInfo>[(int)LoadResPriority.RES_NUM];
-    //
-    protected Dictionary<uint, AsyncLoadResInfo> m_LoadingAssetDic = new Dictionary<uint, AsyncLoadResInfo>();
+    protected List<AsyncLoadResInfo>[] m_LoadingAssetList;
+    protected Dictionary<uint, AsyncLoadResInfo> m_LoadingAssetDic;
 
-    //中间类 回调类 对象池
-    protected ClassObjectPool<AsyncLoadResInfo> m_AsyncLoadResParamPool = new ClassObjectPool<AsyncLoadResInfo>(50);
-
-    protected ClassObjectPool<AsyncLoadResCallBackInfo> m_AsyncCallBackPool = new ClassObjectPool<AsyncLoadResCallBackInfo>(100);
-
-    public void Init(MonoBehaviour mono)
+    public ResHelper(MonoBehaviour mono)
     {
-        AssetBundleMgr.Instance.LoadAssetBundleConfig();
-
-        for (int i = 0; i < (int)LoadResPriority.RES_NUM; i++)
+        m_LoadingAssetList = new List<AsyncLoadResInfo>[(int)LoadResPriority.RES_NUM];
+        m_LoadingAssetDic = new Dictionary<uint, AsyncLoadResInfo>();
+        for (var i = 0; i < (int)LoadResPriority.RES_NUM; i++)
         {
             m_LoadingAssetList[i] = new List<AsyncLoadResInfo>();
         }
@@ -61,15 +73,15 @@ public class ResourceMgr : Singleton<ResourceMgr>
         m_Startmono.StartCoroutine(AsyncLoadCor());
     }
 
-    public T LoadResource<T>(string path) where T : UnityEngine.Object
+    public T LoadResource<T>(string path) where T : Object
     {
         if (string.IsNullOrEmpty(path))
         {
             return null;
         }
 
-        uint crc = Crc32.GetCrc32(path);
-        ResourceItem item = GetCacheResourceItem(crc);
+        var crc = Crc32.GetCrc32(path);
+        var item = GetCacheResourceItem(crc);
         if (item != null)
         {
             return item.m_Obj as T;
@@ -103,12 +115,13 @@ public class ResourceMgr : Singleton<ResourceMgr>
         if (item == null)
         {
             Debug.LogError("ResourceItem is null " + path);
-
+            return;
         }
 
         if (obj == null)
         {
             Debug.LogError("ResourceLoad Fail " + path);
+            return;
         }
         item.m_Obj = obj;
         item.m_Guid = obj.GetInstanceID();
@@ -136,17 +149,10 @@ public class ResourceMgr : Singleton<ResourceMgr>
     ResourceItem GetCacheResourceItem(uint crc, int addrefcount = 1)
     {
         ResourceItem item = null;
-        if (AssetDic.TryGetValue(crc, out item))
+        if (AssetDic.TryGetValue(crc, out item) && item != null)
         {
-            if (item != null)
-            {
-                item.Retain(addrefcount);
-                item.m_LastUseTime = Time.realtimeSinceStartup;
-                //if (item.RefCount <= 1)
-                //{
-                //    m_NoRefrenceAssetMapList.Remove(item);
-                //}
-            }
+            item.Retain(addrefcount);
+            item.m_LastUseTime = Time.realtimeSinceStartup;
         }
 
         return item;
@@ -194,7 +200,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
         {
             return false;
         }
-        
+
         ResourceItem item = null;
         foreach (var res in AssetDic.Values)
         {
@@ -211,7 +217,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
         }
 
         item.Release();
-        DestroyResourceItem(item,destroyObj);
+        DestroyResourceItem(item, destroyObj);
         return true;
     }
 
@@ -221,9 +227,9 @@ public class ResourceMgr : Singleton<ResourceMgr>
     protected void WashOut()
     {
         //当大于缓存个数时，进行一半释放
-        while (m_NoRefrenceAssetMapList.Size() >= MAXCACHECOUNT)
+        while (m_NoRefrenceAssetMapList.Size() >= MAX_CACHE_COUNT)
         {
-            for (int i = 0; i < MAXCACHECOUNT / 2; i++)
+            for (int i = 0; i < MAX_CACHE_COUNT / 2; i++)
             {
                 ResourceItem item = m_NoRefrenceAssetMapList.Back();
                 DestroyResourceItem(item, true);
@@ -234,30 +240,29 @@ public class ResourceMgr : Singleton<ResourceMgr>
     IEnumerator AsyncLoadCor()
     {
         //回调队列
-        List<AsyncLoadResCallBackInfo> callBackList = null;
-      
-        long lastYieldTime = System.DateTime.Now.Ticks;
+
+        var lastYieldTime = System.DateTime.Now.Ticks;
         while (true)
         {
-            bool haveYield = false;
+            var haveYield = false;
             //遍历需加载资源队列
-            for (int i = 0; i < (int)LoadResPriority.RES_NUM; i++)
+            for (var i = 0; i < (int)LoadResPriority.RES_NUM; i++)//加载每个级别的第一个元素
             {
-                List<AsyncLoadResInfo> loadingList = m_LoadingAssetList[i];
+                var loadingList = m_LoadingAssetList[i];
                 if (loadingList.Count <= 0)
                 {
                     continue;
                 }
 
-                AsyncLoadResInfo loadingItem = loadingList[0];
+                var loadingItem = loadingList[0];
                 loadingList.RemoveAt(0);
                 //取出回调
-                callBackList = loadingItem.m_CallBackList;
+                var callBackList = loadingItem.m_CallBackList;
 
                 Object obj = null;
                 ResourceItem item = null;
 #if UNITY_EDITOR
-                if (!m_loadFromAssetBundle)
+                if (!m_loadFromAssetBundle)//Editor的异步加载
                 {
                     obj = LoadAssetByEditor<Object>(loadingItem.m_Path);
                     //模拟异步加载
@@ -265,21 +270,15 @@ public class ResourceMgr : Singleton<ResourceMgr>
                     item = AssetBundleMgr.Instance.GetResourceItem(loadingItem.m_Crc);
                 }
 #endif
+                //从AB包加载资源出来
                 if (obj == null)
                 {
                     item = AssetBundleMgr.Instance.LoadResouceAssetBundle(loadingItem.m_Crc);
                     if (item != null && item.m_AssetBundle != null)
                     {
                         AssetBundleRequest abRequest = null;
-                        if (loadingItem.isSprite)
-                        {
-                            abRequest = item.m_AssetBundle.LoadAssetAsync<Sprite>(item.m_AssetName);
-                        }
-                        else
-                        {
-                            abRequest=item.m_AssetBundle.LoadAssetAsync(item.m_AssetName);
-                        }
-                            
+                        abRequest = loadingItem.isSprite ? item.m_AssetBundle.LoadAssetAsync<Sprite>(item.m_AssetName) : item.m_AssetBundle.LoadAssetAsync(item.m_AssetName);
+
                         yield return abRequest;
                         if (abRequest.isDone)
                         {
@@ -291,19 +290,16 @@ public class ResourceMgr : Singleton<ResourceMgr>
                 }
 
                 CacheResource(loadingItem.m_Path, ref item, loadingItem.m_Crc, obj, callBackList.Count);
-                for (int j = 0; j < callBackList.Count; j++)
+                foreach (var callBack in callBackList)
                 {
-                    AsyncLoadResCallBackInfo callBack = callBackList[j];
-                    if (callBack != null && callBack.m_DealFinish != null)
+                    if (callBack?.m_DealFinish != null)
                     {
                         callBack.m_DealFinish(loadingItem.m_Path, obj, callBack.m_Param1, callBack.m_Param2,
                             callBack.m_Param3);//执行回调
-                        callBack.m_DealFinish = null;
+                        callBack.Reset();
                     }
 
-                    callBack.Reset();
                     m_AsyncCallBackPool.Recycle(callBack);
-
                 }
 
 
@@ -313,7 +309,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
                 loadingItem.Reset();
                 m_AsyncLoadResParamPool.Recycle(loadingItem);
 
-                if (System.DateTime.Now.Ticks - lastYieldTime > MAXLOADRESTIME)//大于这个时间等待一帧
+                if (System.DateTime.Now.Ticks - lastYieldTime > MAX_LOAD_RES_TIME)//大于这个时间等待一帧
                 {
                     yield return null;
                     lastYieldTime = System.DateTime.Now.Ticks;
@@ -321,7 +317,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
                 }
             }
 
-            if (!haveYield||System.DateTime.Now.Ticks - lastYieldTime > MAXLOADRESTIME)//大于这个时间等待一帧
+            if (!haveYield || System.DateTime.Now.Ticks - lastYieldTime > MAX_LOAD_RES_TIME)//大于这个时间等待一帧
             {
                 lastYieldTime = System.DateTime.Now.Ticks;
             }
@@ -338,13 +334,10 @@ public class ResourceMgr : Singleton<ResourceMgr>
             crc = Crc32.GetCrc32(path);
         }
 
-        ResourceItem item = GetCacheResourceItem(crc);
+        var item = GetCacheResourceItem(crc);
         if (item != null)
         {
-            if (dealFinish != null)
-            {
-                dealFinish(path, item.m_Obj, param1, param2, param3);
-            }
+            dealFinish?.Invoke(path, item.m_Obj, param1, param2, param3);
 
             return;
         }
@@ -361,7 +354,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
         }
 
         //往回调列表里面加回调
-        AsyncLoadResCallBackInfo callBack = m_AsyncCallBackPool.Spawn();
+        var callBack = m_AsyncCallBackPool.Spawn();
         callBack.m_DealFinish = dealFinish;
         callBack.m_Param1 = param1;
         callBack.m_Param2 = param2;
@@ -370,5 +363,4 @@ public class ResourceMgr : Singleton<ResourceMgr>
     }
 
 }
-
 

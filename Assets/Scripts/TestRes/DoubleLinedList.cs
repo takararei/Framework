@@ -38,7 +38,7 @@ public class DoubleLinedList<T> where T : class, new()
     /// <returns></returns>
     public DoubleLinkedListNode<T> AddToHeader(T t)
     {
-        DoubleLinkedListNode<T> pList = m_DoubleLinkNodePool.Spawn(true);
+        DoubleLinkedListNode<T> pList = m_DoubleLinkNodePool.Spawn();
         pList.next = null;
         pList.prev = null;
         pList.curr = t;
@@ -77,7 +77,7 @@ public class DoubleLinedList<T> where T : class, new()
     /// <returns></returns>
     public DoubleLinkedListNode<T> AddToTail(T t)
     {
-        DoubleLinkedListNode<T> pList = m_DoubleLinkNodePool.Spawn(true);
+        DoubleLinkedListNode<T> pList = m_DoubleLinkNodePool.Spawn();
         pList.next = null;
         pList.prev = null;
         pList.curr = t;

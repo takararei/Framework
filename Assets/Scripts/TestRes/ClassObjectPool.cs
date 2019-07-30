@@ -19,7 +19,7 @@ public class ClassObjectPool<T>where T:class,new()
         }
     }
 
-    public T Spawn(bool createIfPoolEmpty)
+    public T Spawn(bool createIfPoolEmpty=true)
     {
         if (m_Pool.Count > 0)
         {

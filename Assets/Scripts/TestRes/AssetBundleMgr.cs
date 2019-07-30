@@ -68,9 +68,15 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
     //加载包里的资源信息
     public ResourceItem LoadResouceAssetBundle(uint crc)
     {
-        ResourceItem item = null;
+        ResourceItem item = GetResourceItem(crc);
 
-        if (!m_ResourceItemDic.TryGetValue(crc, out item) || item == null)
+        //if (!m_ResourceItemDic.TryGetValue(crc, out item) || item == null)
+        //{
+        //    Debug.LogError(string.Format("LoadResourceAssetBundle error: can not find crc {0} in AssetBundleConfig", crc.ToString()));
+        //    return item;
+        //}
+
+        if (item == null)
         {
             Debug.LogError(string.Format("LoadResourceAssetBundle error: can not find crc {0} in AssetBundleConfig", crc.ToString()));
             return item;
@@ -132,7 +138,7 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
                 Debug.LogError(" Load AssetBundle Error:" + fullPath);
             }
 
-            item = m_AssetBundleItemPool.Spawn(true);
+            item = m_AssetBundleItemPool.Spawn();
             item.assetBundle = assetBundle;
             item.Retain();
             m_AssetBundleItemDic.Add(crc, item);
