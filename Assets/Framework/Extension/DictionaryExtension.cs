@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Assets.Framework.Extension
 {
@@ -24,6 +22,14 @@ namespace Assets.Framework.Extension
         {
             Tvalue value;
             return dict.TryGetValue(key, out value);
+        }
+    }
+
+    public static class StringExtension
+    {
+        public static byte[] ToBytes(this string str)
+        {
+            return System.Text.Encoding.UTF8.GetBytes(str);
         }
     }
 }

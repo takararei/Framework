@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-namespace Assets.Framework.Extension
-{
+﻿using UnityEngine;
+//namespace Assets.Framework.Extension
+//{
     public static class TransformExtension
     {
         public static void Show(this Transform transform)
@@ -108,4 +106,4 @@ namespace Assets.Framework.Extension
         }
 
     }
-}
+//}

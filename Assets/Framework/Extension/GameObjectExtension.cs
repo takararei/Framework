@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿
 using UnityEngine;
-namespace Assets.Framework.Extension
-{
+//namespace Assets.Framework.Extension
+//{
     public static class GameObjectExtension
     {
         public static void Show(this GameObject go)
@@ -16,4 +15,4 @@ namespace Assets.Framework.Extension
         }
 
     }
-}
+//}
