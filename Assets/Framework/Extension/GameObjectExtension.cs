@@ -1,4 +1,5 @@
 ﻿
+using Assets.Framework.Tools;
 using UnityEngine;
 //namespace Assets.Framework.Extension
 //{
@@ -12,6 +13,11 @@ using UnityEngine;
         public static void Hide(this GameObject go)
         {
             go.SetActive(false);
+        }
+
+        public static T Find<T>(this GameObject go, string name)where T:Object
+        {
+            return UITool.FindChild<T>(go, name);
         }
 
     }

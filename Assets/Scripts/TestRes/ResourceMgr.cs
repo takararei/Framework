@@ -88,7 +88,15 @@ public class ResourceMgr : Singleton<ResourceMgr>
             item = AssetBundleMgr.Instance.LoadResouceAssetBundle(crc);
             if (item != null && item.m_AssetBundle != null)
             {
-                obj = item.m_AssetBundle.LoadAsset<T>(item.m_AssetName);
+                if (item.m_Obj != null)
+                {
+                    obj = item.m_Obj as T;
+                }
+                else
+                {
+                    obj = item.m_AssetBundle.LoadAsset<T>(item.m_AssetName);
+                }
+                
             }
         }
 
@@ -161,7 +169,7 @@ public class ResourceMgr : Singleton<ResourceMgr>
 
         if (!destroyCache)
         {
-            m_NoRefrenceAssetMapList.InsertToHead(item);
+            //m_NoRefrenceAssetMapList.InsertToHead(item);
             return;
         }
 
@@ -214,7 +222,25 @@ public class ResourceMgr : Singleton<ResourceMgr>
         DestroyResourceItem(item,destroyObj);
         return true;
     }
+    //不需要实例化的资源卸载 根据路径
+    public bool ReleaseResource(string path,bool destroyObj=false)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
 
+        uint crc = Crc32.GetCrc32(path);
+        ResourceItem item = null;
+        if (!AssetDic.TryGetValue(crc, out item) || null == item)
+        {
+            Debug.LogError("AssetDic里不存在该资源" +path + "可能释放了多次");
+        }
+        
+        item.Release();
+        DestroyResourceItem(item, destroyObj);
+        return true;
+    }
     /// <summary>
     /// 缓存太多，清除最早没有使用的资源
     /// </summary>
@@ -368,6 +394,123 @@ public class ResourceMgr : Singleton<ResourceMgr>
         callBack.m_Param3 = param3;
         para.m_CallBackList.Add(callBack);
     }
+
+    public void ClearCache()
+    {
+        List<ResourceItem> tempList = new List<ResourceItem>();//为了不在foreach中做移除
+        foreach (var item in AssetDic.Values)
+        {
+            if (item.m_Clear)
+            {
+                tempList.Add(item);
+            }
+            
+        }
+
+        foreach (var item in tempList)
+        {
+            DestroyResourceItem(item, true);
+        }
+
+        tempList.Clear();
+//         while (m_NoRefrenceAssetMapList.Size() > 0)
+//         {
+//             ResourceItem item = m_NoRefrenceAssetMapList.Back();
+//             DestroyResourceItem(item, item.m_Clear);
+//             m_NoRefrenceAssetMapList.Pop();
+//         }
+    }
+    //预加载，跳场景不清除的资源
+    public void PreLoad(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return;
+        }
+        uint crc = Crc32.GetCrc32(path);
+        ResourceItem item = GetCacheResourceItem(crc,0);//预加载 不添加引用
+        if (item != null)
+        {
+            return;
+        }
+
+        Object obj = null;
+#if UNITY_EDITOR
+        if (!m_loadFromAssetBundle)//编辑器加载
+        {
+            obj = LoadAssetByEditor<Object>(path);
+            item = AssetBundleMgr.Instance.GetResourceItem(crc);
+        }
+#endif
+        if (obj == null)
+        {
+            item = AssetBundleMgr.Instance.LoadResouceAssetBundle(crc);
+            if (item != null && item.m_AssetBundle != null)
+            {
+                obj = item.m_AssetBundle.LoadAsset<Object>(item.m_AssetName);
+            }
+        }
+
+        CacheResource(path, ref item, crc, obj);
+        //设置跳场景 不清空
+        item.m_Clear = false;
+        ReleaseResource(obj, false);
+    }
+
+    public ResourceObj LoadResoruce(string path,ResourceObj resObj)
+    {
+        if (resObj == null)
+        {
+            return null;
+        }
+
+        uint crc = resObj.m_Crc == 0 ? Crc32.GetCrc32(path) : resObj.m_Crc;
+        ResourceItem item = GetCacheResourceItem(crc);
+        if (item != null)
+        {
+            resObj.m_ResItem = item;
+            return resObj;
+        }
+
+        Object obj = null;
+
+#if UNITY_EDITOR
+        if (!m_loadFromAssetBundle)
+        {
+            obj = LoadAssetByEditor<Object>(path);
+            item = AssetBundleMgr.Instance.GetResourceItem(resObj.m_Crc);
+            if (item.m_Obj != null)
+            {
+                obj = item.m_Obj as Object;
+            }
+            else
+            {
+                obj = LoadAssetByEditor<Object>(path);
+            }
+        }
+#endif
+        item = AssetBundleMgr.Instance.LoadResouceAssetBundle(crc);
+        if (item != null && item.m_AssetBundle != null)
+        {
+            if (item.m_Obj != null)
+            {
+                obj = item.m_Obj as Object;
+            }
+            else
+            {
+                obj = item.m_AssetBundle.LoadAsset<Object>(item.m_AssetName);
+            }
+
+        }
+
+        CacheResource(path, ref item, crc, obj);
+        resObj.m_ResItem = item;
+        item.m_Clear = resObj.m_bClear;
+
+        return resObj;
+    }
+
+    
 
 }
 

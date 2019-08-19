@@ -18,7 +18,7 @@ public class ResourceItem
     /// </summary>
     public string m_ABName = string.Empty;
     /// <summary>
-    /// 资源所在AB包的依赖包
+    /// 资源所在AB包的依赖包名称
     /// </summary>
     public List<string> m_DependAssetBundle = null;
     /// <summary>
