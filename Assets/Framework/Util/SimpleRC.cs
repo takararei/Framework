@@ -9,8 +9,8 @@ namespace Assets.Framework.Util
     {
         int RefCount { get; }
 
-        void Retain(object refOwner = null);
-        void Release(object refOwner = null);
+        void Retain(int count);
+        void Release(int count);
     }
     //简单的计数器
     public class SimpleRC : IRefCounter
@@ -22,17 +22,21 @@ namespace Assets.Framework.Util
 
         public int RefCount { get; private set; }
 
-        public void Retain(object refOwner = null)
+        public void Retain(int count=1)
         {
-            ++RefCount;
+            RefCount+=count;
         }
 
-        public void Release(object refOwner = null)
+        public void Release(int count=1)
         {
-            --RefCount;
+            RefCount-=count;
             if (RefCount == 0)
             {
                 OnZeroRef();
+            }
+            else if (RefCount < 0)
+            {
+                throw new Exception("引用低于0");
             }
         }
 

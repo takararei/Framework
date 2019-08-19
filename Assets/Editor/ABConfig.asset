@@ -14,9 +14,9 @@ MonoBehaviour:
   m_AllPrefabPath:
   - Assets/GameData/Prefabs
   m_AllFileDirAB:
-  - ABName: shader
+  - ABName: shaders
     Path: Assets/GameData/Shaders
-  - ABName: sound
+  - ABName: sounds
     Path: Assets/GameData/Sounds
-  - ABName: assetbundleconfig
+  - ABName: myabconfig
     Path: Assets/GameData/Data/ABData

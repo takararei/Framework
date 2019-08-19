@@ -12,7 +12,7 @@ namespace Assets.Framework
     public class ABEditor:UnityEditor.Editor
     {
         private const string ABConfigPath= "Assets/Editor/ABConfig.asset";
-        private const string ABBuildPath = "Assets/ABBuild";
+        private static string ABBuildPath = Application.streamingAssetsPath;
         private static List<string> ResPathList = new List<string>();
         private static List<string> prefabPathList = new List<string>();
         [MenuItem("Tools/BuildConfig")]
@@ -39,7 +39,7 @@ namespace Assets.Framework
             //4.设置AB名
             SetABName();
             //5.打包
-
+            ABGenerate();
             //6.清除AB名
             ClearABName();
         }
@@ -120,6 +120,7 @@ namespace Assets.Framework
                 info.abName = Path.GetFileNameWithoutExtension(item);
                 info.path = item;
                 info.dependencies = new List<string>();
+                info.resList = new List<ResInfo>();
                 //GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(item);
                 string[] allDepend =AssetDatabase.GetDependencies(item);
                 
@@ -134,6 +135,13 @@ namespace Assets.Framework
                     }
 
                 }
+
+                ResInfo res = new ResInfo();
+                res.abName = info.abName;
+                res.name = Path.GetFileNameWithoutExtension(item);
+                res.path = item;
+                info.resList.Add(res);
+
                 infoList.Add(info);
             }
             //--------------打表
@@ -171,6 +179,8 @@ namespace Assets.Framework
             {
                 AssetDatabase.RemoveAssetBundleName(oldABNames[i], true);
             }
+
+            AssetDatabase.Refresh();
         }
         static void ABGenerate()
         {

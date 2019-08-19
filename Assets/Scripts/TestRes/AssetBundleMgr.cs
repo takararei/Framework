@@ -66,7 +66,7 @@ public class AssetBundleMgr : Singleton<AssetBundleMgr>
         return true;
     }
     //加载包里的资源信息
-    public ResourceItem LoadResouceAssetBundle(uint crc)
+    public ResourceItem LoadResourceAssetBundle(uint crc)
     {
         ResourceItem item = GetResourceItem(crc);
 

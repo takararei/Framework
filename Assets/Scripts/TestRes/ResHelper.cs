@@ -97,7 +97,7 @@ public class ResHelper
 #endif
         if (obj == null)
         {
-            item = AssetBundleMgr.Instance.LoadResouceAssetBundle(crc);
+            item = AssetBundleMgr.Instance.LoadResourceAssetBundle(crc);
             if (item != null && item.m_AssetBundle != null)
             {
                 obj = item.m_AssetBundle.LoadAsset<T>(item.m_AssetName);
@@ -273,7 +273,7 @@ public class ResHelper
                 //从AB包加载资源出来
                 if (obj == null)
                 {
-                    item = AssetBundleMgr.Instance.LoadResouceAssetBundle(loadingItem.m_Crc);
+                    item = AssetBundleMgr.Instance.LoadResourceAssetBundle(loadingItem.m_Crc);
                     if (item != null && item.m_AssetBundle != null)
                     {
                         AssetBundleRequest abRequest = null;
